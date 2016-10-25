@@ -1,0 +1,180 @@
+<html>
+	<head>
+		<title>Simple Chat Application</title>
+		        <script src="/bower_components/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="/bower_components/core-scaffold/core-scaffold.html">
+    <link rel="import" href="/bower_components/core-item/core-item.html">
+    <link rel="import" href="/bower_components/paper-input/paper-input.html">
+    <link rel="import" href="/bower_components/paper-fab/paper-fab.html">
+    <link rel="import" href="/bower_components/paper-icon-button/paper-icon-button.html">
+    <link rel="import" href="/bower_components/paper-input/paper-input-decorator.html">
+      
+	<style>
+		
+
+
+		.error{
+			color:red;
+		}
+		.whisper{
+			color:gray;
+			font-style:italic;
+		}
+		#contentWrap{
+    display:none;
+}
+form paper-input-decorator {
+    position: fixed;
+    bottom: 0;
+    padding: 10px;
+    width: 90%;
+    margin-right: .5%;
+}
+form paper-icon-button {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    margin: 0 20px 10px 0;
+}
+paper-shadow {
+    margin: 5px;
+    padding: 10px;
+    float: left;
+    align-self: flex-start;
+}
+	</style>
+	</head>
+	<body fullbleed unresolved>
+		<div id="nickWrap">
+			<p>Enter A Nick Name</p>
+			<P id="nickError"></P>
+			<form name="form" id="setNick" onsubmit="return nickForm1();">
+					
+					<paper-input name="name" id="nickname" label="name"></paper-input>
+					<paper-fab icon="send" onclick="return nickForm1();" id="sendButton" ></paper-fab>
+
+			</form>
+
+		</div>
+
+		<div id="contentWrap">
+		<core-scaffold>
+			<core-header-panel navigation flex>
+				<div layout vertical id="users"></div>
+				
+			</core-header-panel>
+							 <div tool layout horizontal flex>
+					<span flex>Real Time chat Application</span>
+					<core-icon icon="account-circle"></core-icon>
+					<span></span>
+				</div>
+			<div id="chatWrap">
+			
+
+				
+				<div id="chat" flex>
+				
+				
+				</div>
+				<form id="send-message" onsubmit="return messageForm1();">
+				<paper-input-decorator id="decorator"
+									   label="Enter message to send">
+					<input id="message" autocomplete="off" autofocus/>
+				</paper-input-decorator>
+				<paper-icon-button id="button" onclick="return messageForm2();" icon="send"></paper-icon-button>
+					
+				</form>
+			</div>
+		</core-scaffold>
+		
+			
+			
+			
+		</div>
+
+
+		
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			
+				var socket = io.connect();
+				var nickForm = document.getElementById("setNick");
+				var nickError = document.getElementById("nickError");
+				var nickBox = document.getElementById('nickname');
+				var users = document.getElementById('users');
+				var messageForm = document.getElementById('send-message');
+				var chat = document.getElementById('chat');
+				var messageBox = document.getElementById('message');
+
+				function nickForm1(){
+					
+					socket.emit('new user', nickBox.value, function(data){
+						if(data){
+							document.getElementById('nickWrap').style.display = 'none';
+							document.getElementById('contentWrap').style.display = 'block';
+						}else{
+							nickError.innerHTML = 'This username is already taken! try another one.';
+						}
+					});
+					nickBox.value = '';
+					return false;
+				}
+				socket.on('username', function(data){
+					var html = '';
+					
+					for(var i=0; i < data.msg.length; i++){
+						
+							html += '<core-item label="'+ data.msg[i] +'"></core-item>';	
+						
+					}
+					users.innerHTML = html;
+				});
+
+				function messageForm1(){
+					
+					socket.emit('send message', messageBox.value, function(data){
+						chat.innerHTML = chat.innerHTML + '<x-chat-list><span class="error">'+ data + "</span></x-chat-list><br />";
+					});
+					//alert($messageBox.val());
+					messageBox.value = '';
+					return false;
+				}
+				function messageForm2(){
+					
+					socket.emit('send message', messageBox.value, function(data){
+						chat.innerHTML = chat.innerHTML + '<x-chat-list><span class="error">'+ data + "</span></x-chat-list><br />";
+					});
+					//alert($messageBox.val());
+					messageBox.value = '';
+					return false;
+				}
+				socket.on('load old msgs', function(docs){
+					for(var i=docs.length-1; i >= 0; i--){
+						displayMsg(docs[i]);
+					}
+				});
+				socket.on('new message', function(data){
+					displayMsg(data);
+				});
+				function displayMsg(data){
+					chat.innerHTML = chat.innerHTML + '<x-chat-list><span class="msg"><b>'+ data.nick +': </b>' + data.msg + "</span></x-chat-list><br />";
+				}
+				socket.on('whisper', function(data){
+					chat.innerHTML = chat.innerHTML + '<x-chat-list><span class="whisper"><b>'+ data.nick +': </b>' + data.msg + "</span></x-chat-list><br />";
+				});
+
+				
+        if('serviceWorker' in navigator){
+            navigator.serviceWorker
+            .register('./service-worker.js', { scope: './'})
+            .then(function(registration){
+                console.log("serviceWorker Registered!", registration);
+            })
+            .catch(function(err){
+                console.log("service worker Failed to Registered!", err);
+            })
+        }
+		</script>
+	</body>
+
+</html>

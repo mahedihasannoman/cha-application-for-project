@@ -1,0 +1,17 @@
+{
+  "name": "iochat",
+  "version": "1.0.0",
+  "description": "Demo Decription",
+  "main": "server.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "Mahedi Hasan",
+  "license": "ISC",
+  "dependencies": {
+    "chai": "^3.5.0",
+    "express": "*",
+    "mocha": "^3.1.2",
+    "socket.io": "*"
+  }
+}
